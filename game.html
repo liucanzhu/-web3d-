@@ -1,0 +1,2324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js - misc - octree collisions</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="main.css">
+</head>
+<body>
+<!--<div id="info">Octree threejs demo - basic collisions with static triangle mesh<br />WASD to move, space to jump, use mouse to throw balls and move the camera.</div>-->
+<div id="container"></div>
+
+<script type="module">
+
+    import * as THREE from './build/three.module.js';
+
+    import Stats from './example/jsm/libs/stats.module.js';
+    import {GUI} from './example/jsm/libs/dat.gui.module.js';
+    import {GLTFLoader} from './example/jsm/loaders/GLTFLoader.js';
+    import {DRACOLoader} from './example/jsm/loaders/DRACOLoader.js';
+    import {Octree} from './example/jsm/math/Octree.js';
+    import {OrbitControls} from "./example/jsm/controls/OrbitControls.js";
+    import {TWEEN} from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/examples/jsm/libs/tween.module.min.js';
+    import { VRButton } from './example/jsm/webxr/VRButton.js';
+    import { XRControllerModelFactory } from './example/jsm/webxr/XRControllerModelFactory.js';
+    //import {Color} from "./build/three.module.js";
+    //import {Line} from "./build/three.module.js";
+    // import * as echarts from './node_modules/echarts'
+    var arr_json0 = [
+        {
+            name: '好',
+            number: 4927
+        }, {
+            name: '企鹅',
+            number: 4559
+        }, {
+            name: '房间',
+            number: 4084
+        }, {
+            name: '孩子',
+            number: 3951
+        }, {
+            name: '可以',
+            number: 3523
+        }, {
+            name: '不错',
+            number: 3381
+        }, {
+            name: '海洋',
+            number: 3031
+        }, {
+            name: '方便',
+            number: 2768
+        }, {
+            name: '王国',
+            number: 2728
+        }, {
+            name: '服务',
+            number: 2640
+        }, {
+            name: '早餐',
+            number: 2346
+        }, {
+            name: '喜欢',
+            number: 2326
+        }, {
+            name: '入住',
+            number: 2269
+        }, {
+            name: '玩',
+            number: 1934
+        }, {
+            name: '小朋友',
+            number: 1931
+        }, {
+            name: '住',
+            number: 1924
+        }, {
+            name: '适合',
+            number: 1728
+        }, {
+            name: '吃',
+            number: 1470
+        }, {
+            name: '长隆',
+            number: 1452
+        }, {
+            name: '小',
+            number: 1406
+        }, {
+            name: '特别',
+            number: 1369
+        }, {
+            name: '没有',
+            number: 1318
+        }, {
+            name: '多',
+            number: 1293
+        }, {
+            name: '看',
+            number: 1230
+        }, {
+            name: '设施',
+            number: 1148
+        }, {
+            name: '开心',
+            number: 1138
+        }, {
+            name: '房',
+            number: 1129
+        }, {
+            name: '环境',
+            number: 1407
+        }, {
+            name: '人',
+            number: 1035
+        }, {
+            name: '亲子',
+            number: 1031
+        }
+    ]
+    var arr_json1 = [
+        {
+            "name": "好",
+            "number": 4565
+        }, {
+            "name": "不错",
+            "number": 4386
+        }, {
+            "name": "房间",
+            "number": 4207
+        }, {
+            "name": "马戏",
+            "number": 3975
+        }, {
+            "name": "海洋",
+            "number": 3042
+        }, {
+            "name": "王国",
+            "number": 1926
+        }, {
+            "name": "孩子",
+            "number": 1909
+        }, {
+            "name": "方便",
+            "number": 1895
+        }, {
+            "name": "可以",
+            "number": 1887
+        }, {
+            "name": "服务",
+            "number": 1722
+        }, {
+            "name": "早餐",
+            "number": 1696
+        }, {
+            "name": "住",
+            "number": 1601
+        }, {
+            "name": "喜欢",
+            "number": 1572
+        }, {
+            "name": "企鹅",
+            "number": 1550
+        }, {
+            "name": "入住",
+            "number": 1548
+        }, {
+            "name": "长隆",
+            "number": 1518
+        }, {
+            "name": "适合",
+            "number": 1459
+        }, {
+            "name": "性价比",
+            "number": 1453
+        }, {
+            "name": "没有",
+            "number": 1418
+        }, {
+            "name": "环境",
+            "number": 1417
+        }, {
+            "name": "近",
+            "number": 1408
+        }, {
+            "name": "小朋友",
+            "number": 1397
+        }, {
+            "name": "玩",
+            "number": 1387
+        }, {
+            "name": "设施",
+            "number": 2373
+        }, {
+            "name": "干净",
+            "number": 2365
+        }, {
+            "name": "价格",
+            "number": 2351
+        }, {
+            "name": "吃",
+            "number": 2331
+        }, {
+            "name": "看",
+            "number": 3322
+        }, {
+            "name": "房",
+            "number": 3322
+        }, {
+            "name": "小",
+            "number": 3313
+        }
+    ]
+    var arr_json2 = [
+        {
+            "name": "好",
+            "number": 1230
+        }, {
+            "name": "不错",
+            "number": 1050
+        }, {
+            "name": "味道",
+            "number": 1040
+        }, {
+            "name": "吃",
+            "number": 8100
+        }, {
+            "name": "环境",
+            "number": 6700
+        }, {
+            "name": "服务",
+            "number": 5800
+        }, {
+            "name": "可以",
+            "number": 5000
+        }, {
+            "name": "好吃",
+            "number": 4100
+        }, {
+            "name": "菜品",
+            "number": 3500
+        }, {
+            "name": "菜",
+            "number": 3200
+        }, {
+            "name": "推荐",
+            "number": 2900
+        }, {
+            "name": "口味",
+            "number": 2900
+        }, {
+            "name": "小龙虾",
+            "number": 2700
+        }, {
+            "name": "人",
+            "number": 2600
+        }, {
+            "name": "上菜",
+            "number": 2600
+        }, {
+            "name": "热情",
+            "number": 2300
+        }, {
+            "name": "价格",
+            "number": 2200
+        }, {
+            "name": "服务员",
+            "number": 2200
+        }, {
+            "name": "点",
+            "number": 1900
+        }, {
+            "name": "说",
+            "number": 1900
+        }, {
+            "name": "没",
+            "number": 1800
+        }, {
+            "name": "又",
+            "number": 1800
+        }, {
+            "name": "一个",
+            "number": 1800
+        }, {
+            "name": "餐厅",
+            "number": 1800
+        }, {
+            "name": "新鲜",
+            "number": 1700
+        }, {
+            "name": "真的",
+            "number": 1600
+        }, {
+            "name": "有点",
+            "number": 1500
+        }, {
+            "name": "这家",
+            "number": 1500
+        }, {
+            "name": "给",
+            "number": 1400
+        }, {
+            "name": "蚝",
+            "number": 1400
+        }
+    ]
+    var arr_json3 = [
+        {
+            "name": "玩",
+            "number": 4588
+        }, {
+            "name": "多",
+            "number": 4691
+        }, {
+            "name": "表演",
+            "number": 3691
+        }, {
+            "name": "看",
+            "number": 3392
+        }, {
+            "name": "好",
+            "number": 1794
+        }, {
+            "name": "吃",
+            "number": 1794
+        }, {
+            "name": "企鹅",
+            "number": 1794
+        }, {
+            "name": "一天",
+            "number": 1794
+        }, {
+            "name": "长隆",
+            "number": 1794
+        }, {
+            "name": "上",
+            "number": 1595
+        }, {
+            "name": "因为",
+            "number": 1565
+        }, {
+            "name": "可以",
+            "number": 1495
+        }, {
+            "name": "时间",
+            "number": 1465
+        }, {
+            "name": "总体",
+            "number": 1405
+        }, {
+            "name": "好玩",
+            "number": 1395
+        }, {
+            "name": "性价比",
+            "number": 1365
+        }, {
+            "name": "五一",
+            "number": 1345
+        }, {
+            "name": "人",
+            "number": 1305
+        }, {
+            "name": "鲸鲨",
+            "number": 1265
+        }, {
+            "name": "馆",
+            "number": 1205
+        }, {
+            "name": "逛",
+            "number": 1105
+        }, {
+            "name": "会",
+            "number": 1006
+        }, {
+            "name": "建议",
+            "number": 1196
+        }, {
+            "name": "特别",
+            "number": 1196
+        }, {
+            "name": "超赞",
+            "number": 1196
+        }, {
+            "name": "高",
+            "number": 1196
+        }, {
+            "name": "排队",
+            "number": 1196
+        }, {
+            "name": "项目",
+            "number": 1196
+        }, {
+            "name": "没",
+            "number": 1196
+        }, {
+            "name": "动物",
+            "number": 1196
+        }
+    ]
+    var arr_json4 = [
+        {
+        "name": "好",
+        "number": 4664
+    }, {
+        "name": "不错",
+        "number": 3491
+    }, {
+        "name": "房间",
+        "number": 3118
+    }, {
+        "name": "可以",
+        "number": 3069
+    }, {
+        "name": "孩子",
+        "number": 2682
+    }, {
+        "name": "早餐",
+        "number": 2463
+    }, {
+        "name": "服务",
+        "number": 2427
+    }, {
+        "name": "海洋",
+        "number": 2084
+    }, {
+        "name": "入住",
+        "number": 1919
+    }, {
+        "name": "王国",
+        "number": 1870
+    }, {
+        "name": "玩",
+        "number": 1831
+    }, {
+        "name": "海豚",
+        "number": 1813
+    }, {
+        "name": "世界",
+        "number": 1626
+    }, {
+        "name": "住",
+        "number": 1588
+    }, {
+        "name": "环境",
+        "number": 1515
+    }, {
+        "name": "方便",
+        "number": 1487
+    }, {
+        "name": "喜欢",
+        "number": 1417
+    }, {
+        "name": "适合",
+        "number": 1332
+    }, {
+        "name": "水",
+        "number": 1303
+    }, {
+        "name": "没有",
+        "number": 1257
+    }, {
+        "name": "设施",
+        "number": 1235
+    }, {
+        "name": "长隆",
+        "number": 1230
+    }, {
+        "name": "小朋友",
+        "number": 1203
+    }, {
+        "name": "免费",
+        "number": 1141
+    }, {
+        "name": "多",
+        "number": 979
+    }, {
+        "name": "湾",
+        "number": 923
+    }, {
+        "name": "人",
+        "number": 917
+    }, {
+        "name": "企鹅",
+        "number": 900
+    }, {
+        "name": "但是",
+        "number": 897
+    }, {
+        "name": "吃",
+        "number": 891
+    }
+    ]
+    var arr_json5 = [
+        {
+            "name": "好",
+            "number": 4910
+        }, {
+            "name": "不错",
+            "number": 5160
+        }, {
+            "name": "环境",
+            "number": 4860
+        }, {
+            "name": "吃",
+            "number": 3520
+        }, {
+            "name": "多",
+            "number": 2890
+        }, {
+            "name": "味道",
+            "number": 5680
+        }, {
+            "name": "菜品",
+            "number": 4600
+        }, {
+            "name": "服务",
+            "number": 1570
+        }, {
+            "name": "可以",
+            "number": 1320
+        }, {
+            "name": "没有",
+            "number": 2270
+        }, {
+            "name": "好吃",
+            "number": 2180
+        }, {
+            "name": "品种",
+            "number": 2170
+        }, {
+            "name": "很多",
+            "number": 2170
+        }, {
+            "name": "东西",
+            "number": 3050
+        }, {
+            "name": "新鲜",
+            "number": 2103
+        }, {
+            "name": "自助餐",
+            "number": 2296
+        }, {
+            "name": "一般",
+            "number": 1296
+        }, {
+            "name": "价格",
+            "number": 1590
+        }, {
+            "name": "龙虾",
+            "number": 1586
+        }, {
+            "name": "海鲜",
+            "number": 2571
+        }, {
+            "name": "餐厅",
+            "number": 1670
+        }, {
+            "name": "丰富",
+            "number": 1470
+        }, {
+            "name": "种类",
+            "number": 1466
+        }, {
+            "name": "食物",
+            "number": 1466
+        }, {
+            "name": "有点",
+            "number": 1463
+        }, {
+            "name": "喜欢",
+            "number": 1462
+        }, {
+            "name": "比",
+            "number": 1461
+        }, {
+            "name": "没",
+            "number": 1461
+        }, {
+            "name": "这个",
+            "number": 1459
+        }, {
+            "name": "人",
+            "number": 1459
+        }
+    ]
+    var arr_json6 = [
+        {
+            "name": "企鹅",
+            "number": 843
+        }, {
+            "name": "吃",
+            "number": 709
+        }, {
+            "name": "好",
+            "number": 606
+        }, {
+            "name": "不错",
+            "number": 508
+        }, {
+            "name": "环境",
+            "number": 401
+        }, {
+            "name": "可以",
+            "number": 391
+        }, {
+            "name": "菜品",
+            "number": 384
+        }, {
+            "name": "多",
+            "number": 370
+        }, {
+            "name": "看",
+            "number": 308
+        }, {
+            "name": "味道",
+            "number": 281
+        }, {
+            "name": "喜欢",
+            "number": 268
+        }, {
+            "name": "没有",
+            "number": 264
+        }, {
+            "name": "很多",
+            "number": 264
+        }, {
+            "name": "小朋友",
+            "number": 228
+        }, {
+            "name": "孩子",
+            "number": 223
+        }, {
+            "name": "一般",
+            "number": 217
+        }, {
+            "name": "东西",
+            "number": 211
+        }, {
+            "name": "好吃",
+            "number": 209
+        }, {
+            "name": "餐厅",
+            "number": 202
+        }, {
+            "name": "自助餐",
+            "number": 195
+        }, {
+            "name": "品种",
+            "number": 194
+        }, {
+            "name": "服务",
+            "number": 164
+        }, {
+            "name": "边",
+            "number": 155
+        }, {
+            "name": "开心",
+            "number": 153
+        }, {
+            "name": "丰富",
+            "number": 148
+        }, {
+            "name": "人",
+            "number": 145
+        }, {
+            "name": "海鲜",
+            "number": 145
+        }, {
+            "name": "种类",
+            "number": 123
+        }, {
+            "name": "吃饭",
+            "number": 121
+        }, {
+            "name": "龙虾",
+            "number": 121
+        }
+    ]
+    var arr_json7 = [
+        {
+        "name": "马戏",
+        "number": 195
+    }, {
+        "name": "不错",
+        "number": 180
+    }, {
+        "name": "好",
+        "number": 158
+    }, {
+        "name": "精彩",
+        "number": 138
+    }, {
+        "name": "看",
+        "number": 123
+    }, {
+        "name": "表演",
+        "number": 122
+    }, {
+        "name": "方便",
+        "number": 112
+    }, {
+        "name": "好玩",
+        "number": 98
+    }, {
+        "name": "值得",
+        "number": 97
+    }, {
+        "name": "取票",
+        "number": 89
+    }, {
+        "name": "广州",
+        "number": 81
+    }, {
+        "name": "节目",
+        "number": 81
+    }, {
+        "name": "长隆",
+        "number": 79
+    }, {
+        "name": "大",
+        "number": 79
+    }, {
+        "name": "票",
+        "number": 78
+    }, {
+        "name": "可以",
+        "number": 77
+    }, {
+        "name": "有趣",
+        "number": 75
+    }, {
+        "name": "孩子",
+        "number": 65
+    }, {
+        "name": "没有",
+        "number": 63
+    }, {
+        "name": "总体",
+        "number": 60
+    }, {
+        "name": "好看",
+        "number": 59
+    }, {
+        "name": "喜欢",
+        "number": 59
+    }, {
+        "name": "体验",
+        "number": 59
+    }, {
+        "name": "动物",
+        "number": 58
+    }, {
+        "name": "&#",
+        "number": 55
+    }, {
+        "name": "开心",
+        "number": 50
+    }, {
+        "name": "推荐",
+        "number": 48
+    }, {
+        "name": "马戏表演",
+        "number": 48
+    }, {
+        "name": "途牛",
+        "number": 45
+    }, {
+        "name": "位置",
+        "number": 44
+    }
+    ]
+
+    const dracoLoader = new DRACOLoader()
+    // 设置Draco解码器文件所在目录
+    dracoLoader.setDecoderPath('./example/draco/gltf/');
+    // DRACOLoader：给gltf加载器设置drc文件(Draco压缩文件)加载功能
+    var angle = 0;
+    var Clouds = [];//存放生成的云
+    var Ads = [];//存放生成的广告框
+    var Tips=[];//存放云标签
+    var Bars=[];//存放数据展示的10条柱子
+    var PlaneS=[];//存放数据展示下面的平面
+    var leftLine;//功能3的左边路径线
+    var rightLine;//功能3的右边路径线
+    var place1;
+    var place2;
+    var num_left = 0;//一次渲染点的个数
+    var num_right = 0;//一次渲染点的个数
+
+    let controller1, controller2;
+    let controllerGrip1, controllerGrip2;
+    // let raycaster;
+    const intersected = [];
+    const tempMatrix = new THREE.Matrix4();
+    var OriginPosition_Menu = new THREE.Vector3(-940, 250, 736);//记录着拥有菜单时的相机坐标
+    const clock = new THREE.Clock();
+
+    const scene = new THREE.Scene();
+    /**
+     * 场景背景
+     */
+    scene.background = new THREE.Color("#87c9ff");
+    /**
+     * 雾化颜色
+     * 最近距离
+     * 最远距离
+     * @type {Fog}
+     */
+    scene.fog = new THREE.Fog('lightblue', 0.1, 50000)
+
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100000);
+    camera.position.set(-940, 250, 736)//361
+    //camera.position.set(10, 300, 1180)
+    camera.up.set(0, 1, 0)
+    camera.lookAt(scene.position)
+
+
+    const ambientLight = new THREE.AmbientLight("#404040");
+    scene.add(ambientLight);
+    const fillLight1 = new THREE.DirectionalLight(0xffffff, 2);
+    fillLight1.position.set(1000, 1000, -300);
+    scene.add(fillLight1);
+
+    const fillLight2 = new THREE.DirectionalLight("#b5f892", 1);
+    fillLight2.position.set(0, 10, 0);
+    scene.add(fillLight2);
+
+    const advertisementLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    advertisementLight.position.set(-397, 817, 686);
+    advertisementLight.target.position.set(0, 0, 0);
+    advertisementLight.castShadow = true;
+    advertisementLight.shadow.camera.near = 0.01;
+    advertisementLight.shadow.camera.far = 500;
+    advertisementLight.shadow.camera.right = 300;
+    advertisementLight.shadow.camera.left = -300;
+    advertisementLight.shadow.camera.top = 300;
+    advertisementLight.shadow.camera.bottom = -300;
+    advertisementLight.shadow.mapSize.width = 1024;
+    advertisementLight.shadow.mapSize.height = 1024;
+    advertisementLight.shadow.radius = 40;
+    advertisementLight.shadow.bias = -0.00006;
+    scene.add(advertisementLight.target);
+    scene.add(advertisementLight);
+
+    var datGui = new GUI();
+    const renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.VSMShadowMap;
+    renderer.shadowMap.enabled = true;
+    renderer.xr.enabled = true;
+    const container = document.getElementById('container');
+    container.appendChild(renderer.domElement);
+    var controlS = new OrbitControls(camera, renderer.domElement);
+    controlS.update();
+    document.body.appendChild( VRButton.createButton( renderer ) );
+
+
+    /**
+     * 手柄代码
+     * */
+    controller1 = renderer.xr.getController( 0 );
+    controller1.addEventListener( 'selectstart', onSelectStart );
+    controller1.addEventListener( 'selectend', onSelectEnd );
+    scene.add( controller1 );
+
+    controller2 = renderer.xr.getController( 1 );
+    controller2.addEventListener( 'selectstart', onSelectStart );
+    controller2.addEventListener( 'selectend', onSelectEnd );
+    scene.add( controller2 );
+
+    const controllerModelFactory = new XRControllerModelFactory();
+
+    controllerGrip1 = renderer.xr.getControllerGrip( 0 );
+    controllerGrip1.add( controllerModelFactory.createControllerModel( controllerGrip1 ) );
+    scene.add( controllerGrip1 );
+
+    controllerGrip2 = renderer.xr.getControllerGrip( 1 );
+    controllerGrip2.add( controllerModelFactory.createControllerModel( controllerGrip2 ) );
+    scene.add( controllerGrip2 );
+
+    const geometry = new THREE.BufferGeometry().setFromPoints( [ new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, - 1 ) ] );
+
+    const line = new THREE.Line( geometry );
+    line.name = 'line';
+    line.scale.z = 5;
+
+    controller1.add( line.clone() );
+    controller2.add( line.clone() );
+
+    /**
+     * -----------------------------菜单构造区---------------------------------------------------------------------------------------------------------------------------------------
+     * */
+    //菜单功能构造-------------------------------------------------------------------------------------------------------------------------------------------------
+    //射线实现菜单功能，绑定点击事件
+    var MenuFunctionFlag = true;//仅让菜单的一个功能执行，功能执行完毕(云被销毁)会变为true
+    var CloudRunFlag = true;//仅让一朵云运动，动画完成会变为true
+    var CloudLoad = false;//仅让云最多存在一组
+    var AdLoad = false;//仅让广告框最多存在一组
+    var LineLoad = false;//让路线最多存在一组
+    var BarLoad =false;//让数据展示平台最多存在一组
+    var place_clicked1 =false;//
+    var place_clicked2 =false;//
+    var AD_clicked =false;//让广告展示移动到相机前面
+    var raycaster = new THREE.Raycaster();
+    var mouse = new THREE.Vector2();
+    var onMouseClick = (event) => {
+        //通过鼠标点击的位置计算出raycaster所需要的点的位置，以屏幕中心为原点，值的范围为-1到1.
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        // 通过鼠标点的位置和当前相机的矩阵计算出raycaster
+        raycaster.setFromCamera(mouse, camera);
+        // 获取raycaster直线和所有模型相交的数组集合
+        var intersects = raycaster.intersectObjects([scene], true);
+        console.log(intersects[0]);
+        //console.log(Ads);
+        if (intersects.length !== 0)//name 控制功能种类，id控制生成销毁
+        {
+            const obj = intersects[0].object;
+            if (obj instanceof THREE.Sprite) {
+                if (obj.Name === "function1" && (CloudLoad || MenuFunctionFlag)) {
+                    if (!CloudLoad) {
+                        Function1(obj);
+                        MenuFunctionFlag = false;
+                        CloudLoad = true;
+                    } else {
+                        DeleteClouds();
+                        MenuFunctionFlag = true;
+                        CloudLoad = false;
+                    }
+                }
+                else if (obj.Name === "function2" && (MenuFunctionFlag||BarLoad)) {
+                    if(!BarLoad){
+                        DeleteMenu();
+                        MenuFunctionFlag = false;
+                        BarLoad =true;
+                        Function2(obj);
+
+                    }
+                }
+                else if (obj.Name === "function3" && (LineLoad || MenuFunctionFlag)) {
+                    if (!LineLoad) {
+                        DeleteMenu();
+                        MenuFunctionFlag = false;
+                        LineLoad = true;
+                        Function3_front(obj);
+                    }
+                }
+                else if (obj.Name === "function4" && (AdLoad || MenuFunctionFlag)) {
+                    if (!AdLoad) {
+                        Function4(obj);
+                        MenuFunctionFlag = false;
+                        AdLoad = true;
+                    } else {
+                        DeleteAd();
+                        MenuFunctionFlag = true;
+                        AdLoad = false;
+                    }
+                }
+                else if (obj.Name==="鲸鲨馆"&&!MenuFunctionFlag&&LineLoad&&!place_clicked1 ){
+                    place_clicked1 =true;
+                    place1 = obj;
+                    const texture =new THREE.TextureLoader().load("路径规划/鲸鲨馆_click.png");
+                    const newMaterial =new THREE.SpriteMaterial({map:texture});
+                    obj.material = newMaterial;
+                    obj.material.map.needsUpdate = true;
+                    if( place_clicked1&& place_clicked2)
+                    {
+                        setTimeout(Function3_back,1000);
+                    }
+                    //更新画布
+                }
+                else if (obj.Name==="深海世界"&&!MenuFunctionFlag&&LineLoad&&!place_clicked2 ){
+                    place_clicked2 =true;
+                    place2 = obj;
+                    const texture =new THREE.TextureLoader().load("路径规划/深海世界_click.png");
+                    const newMaterial =new THREE.SpriteMaterial({map:texture});
+                    obj.material = newMaterial;
+                    obj.material.map.needsUpdate = true;
+                    if( place_clicked1&& place_clicked2) {
+                        setTimeout(Function3_back,1000);
+                    }
+                    //更新画布
+                }
+                else if(obj.Name==="全景浏览"&&MenuFunctionFlag) {
+                    window.open("./VR全景预览.html")
+                }
+                else if(obj.Name==="鲸鲨馆"&&MenuFunctionFlag){
+                    window.open("VR2.html")
+                }
+                else if(obj.Name==="海洋大街"&&MenuFunctionFlag)
+                {
+                    window.open("VR1.html");
+                }
+                else {
+                    Function5(obj);
+                }
+            } else if ((obj.Name === 'Cloud' || obj.Name === 'Cloud' || obj.Name === 'Cloud' || obj.Name === 'Cloud') && CloudRunFlag)//四朵云
+            {
+                TweenCloud(obj);
+                CloudRunFlag = false;
+            }
+            else if(Ads.indexOf(obj)!==-1&&!AD_clicked)
+            {
+                AD_clicked =true;
+                AdRunTween(obj);
+            }
+            else if(Ads.indexOf(obj)!==-1&&AD_clicked)
+            {
+                AD_clicked =false;
+                AdReturnTween(obj);
+            }
+        }
+    }
+    window.addEventListener('click', onMouseClick, false);
+    /**
+     * -----------------------------菜单构造区---------------------------------------------------------------------------------------------------------------------------------------
+     * */
+    /**
+     **-----------------------------------------菜单功能实现区-----------------------------------------------------------------------------------------------------------------------
+     * */
+        //菜单功能函数:
+
+    var Function1 = (obj) => {
+            const material = new THREE.MeshBasicMaterial({color: "#ffffff", transparent: true, opacity: 0})
+            const loader = new GLTFLoader();
+            loader.load("./Cloudes/6.gltf", function (gltf) {//左一
+                gltf.scene.position.set(0, 0, 0)
+                gltf.scene.children[0].children[0].Name = "Cloud";
+                gltf.scene.children[0].children[0].Display = "帝企鹅自助餐厅";
+                gltf.scene.children[0].children[0].position.set(-160, 95, -60);
+                gltf.scene.children[0].children[0].rotation.set(0, -1, 0);
+                Clouds.push(gltf.scene)
+                gltf.scene.scale.set(5, 5, 5);
+                scene.add(gltf.scene)
+                gltf.scene.children[0].children[0].material = material;
+                CloudCreatTween(gltf.scene.children[0].children[0]);
+                const texture =new THREE.TextureLoader().load("云标签/帝企鹅自助餐厅.png");
+                const CloudTipsMaterial =new  THREE.SpriteMaterial({map:texture,transparent:true,opacity:0});
+                const CloudTips =new THREE.Sprite(CloudTipsMaterial);
+                CloudTips.position.set(-918,293,600);
+                CloudTips.Name ="帝企鹅自助餐厅";
+                Tips.push(CloudTips);
+                CloudTips.scale.set(20,20,1);
+                scene.add(CloudTips);
+                CloudCreatTween(CloudTips);
+
+            });
+            loader.load("./Cloudes/8.gltf", function (gltf) {//左二
+                gltf.scene.position.set(0, 0, 0)
+                gltf.scene.children[0].children[0].Name = "Cloud";
+                gltf.scene.children[0].children[0].Display = "国际马戏城";
+                gltf.scene.children[0].children[0].position.set(-60, 100, -60);
+                gltf.scene.children[0].children[0].rotation.set(0, -1, 0);
+                gltf.scene.scale.set(5, 5, 5);
+                Clouds.push(gltf.scene)
+                scene.add(gltf.scene)
+                gltf.scene.children[0].children[0].material = material;
+                CloudCreatTween(gltf.scene.children[0].children[0]);
+                const texture =new THREE.TextureLoader().load("云标签/国际马戏城.png");
+                const CloudTipsMaterial =new  THREE.SpriteMaterial({map:texture,transparent:true,opacity:0});
+                const CloudTips =new THREE.Sprite(CloudTipsMaterial);
+                CloudTips.position.set(-890,283,655);
+                CloudTips.Name ="国际马戏城";
+                Tips.push(CloudTips);
+              // datGui.add(CloudTips.position,'x',-900,-700)
+              // datGui.add(CloudTips.position,'y',-1000,1000)
+              // datGui.add(CloudTips.position,'z',-1000,1000)
+                CloudTips.scale.set(20,20,1);
+                scene.add(CloudTips);
+                CloudCreatTween(CloudTips);
+            });
+            loader.load("./Cloudes/4.gltf", function (gltf) {//右一
+                gltf.scene.position.set(0, 0, 0)
+                gltf.scene.children[0].children[0].Name = "Cloud"
+                gltf.scene.children[0].children[0].Display = "横琴湾酒店";
+                gltf.scene.children[0].children[0].position.set(30, 80, 170);
+                gltf.scene.children[0].children[0].rotation.set(0, -1, 0);
+                Clouds.push(gltf.scene)
+                console.log(gltf.scene.children[0].children[0].Display);
+                gltf.scene.scale.set(5, 5, 5);
+                scene.add(gltf.scene)
+                gltf.scene.children[0].children[0].material = material;
+                CloudCreatTween(gltf.scene.children[0].children[0]);
+                const texture =new THREE.TextureLoader().load("云标签/横琴湾酒店.png");
+                const CloudTipsMaterial =new  THREE.SpriteMaterial({map:texture,transparent:true,opacity:0});
+                const CloudTips =new THREE.Sprite(CloudTipsMaterial);
+
+                CloudTips.position.set(-806,286,750);
+                CloudTips.Name ="横琴湾酒店";
+                Tips.push(CloudTips);
+             //  datGui.add(CloudTips.position,'x',-1000,1000)
+             //  datGui.add(CloudTips.position,'y',-1000,1000)
+             //  datGui.add(CloudTips.position,'z',600,800)
+                CloudTips.scale.set(20,20,1);
+                scene.add(CloudTips);
+                CloudCreatTween(CloudTips);
+            });
+            loader.load("./Cloudes/6.gltf", function (gltf) {//右二
+                gltf.scene.position.set(0, 0, 0)
+                gltf.scene.children[0].children[0].Name = "Cloud";
+                gltf.scene.children[0].children[0].Display = "海洋王国";
+                gltf.scene.children[0].children[0].position.set(-40, 85, 100);
+                gltf.scene.children[0].children[0].rotation.set(0, -1, 0);
+                Clouds.push(gltf.scene)
+                gltf.scene.scale.set(5, 5, 5);
+                scene.add(gltf.scene);
+                gltf.scene.children[0].children[0].material = material;
+                CloudCreatTween(gltf.scene.children[0].children[0]);
+                const texture =new THREE.TextureLoader().load("云标签/海洋王国.png");
+                const CloudTipsMaterial =new  THREE.SpriteMaterial({map:texture,transparent:true,opacity:0});
+                const CloudTips =new THREE.Sprite(CloudTipsMaterial);
+                CloudTips.position.set(-850,284,706);
+
+                CloudTips.Name ="海洋王国";
+                Tips.push(CloudTips);
+               // datGui.add(CloudTips.position,'x',-1000,1000);
+               // datGui.add(CloudTips.position,'y',-1000,1000);
+               // datGui.add(CloudTips.position,'z',-1000,1000);
+                CloudTips.scale.set(20,20,1);
+                scene.add(CloudTips);
+                CloudCreatTween(CloudTips);
+            });
+        }
+    var Function2 = () => {
+
+       //柱体颜色
+
+        const color_array =
+            [
+                "#00FF00", "#00ffb7", "#00ffea","#00a6ff",
+                "#0040ff","#6200ff","#d000ff","#ff0099",
+                "#ff5900","#e01969","#ff0000"
+            ]//0-10
+        //位置与高度
+        const location_array =[];
+        function load_local(array){
+            array.push(new THREE.Vector3(-583, -10, 654));
+            array.push(new THREE.Vector3(-617, -22, 384));
+            array.push(new THREE.Vector3(-213, -13, 476));
+            array.push(new THREE.Vector3(-715, 0, 239));
+            array.push(new THREE.Vector3(-213, -13, 232));
+            array.push(new THREE.Vector3(-446, -22, 193));
+            array.push(new THREE.Vector3(-724, -17, 607));
+            array.push(new THREE.Vector3(-819, -30, 441));
+            array.push(new THREE.Vector3(611, 0, 180));
+            array.push(new THREE.Vector3(-375, 0, 320));
+        }
+        load_local(location_array);
+        //高度变换数组,10小时
+        const height_array = [[512,946,898,765,1232,1221,1321,1118,801,541],
+            [831,1356,1312,913,1012,1331,1325,1244,1088,513],
+            [752,1206,1320,913,831,1024,1201,921,1001,612],
+            [425,865,921,713,911,965,832,615,713,711],
+            [1029, 974, 1351, 1284, 1023, 987, 964, 833, 1120, 819],
+            [727, 656, 865, 1370, 1323, 1250, 1160, 1310, 1268, 981],//max =1370
+            [921,1003,1021,1254,1354,902,812,903,710,1023],
+            [1345,1168, 901,969,978,1022,1259,1282,1208,832],
+            [1021, 612,901,1231,701,321,487,645,813,1033],
+            [769, 765,1035,789,701,487,321,813,645,965]]//min = 321
+        const bar_array = []
+        function initBar(Point, Heights) {
+
+            // 一个立方体网格模型
+            const PlaneGeometry = new THREE.PlaneGeometry(5,5,1,1);
+            const PlaneMaterial = new THREE.MeshBasicMaterial({
+                color: "#f0f8ff",
+            });
+            const Plane = new THREE.Mesh(PlaneGeometry,PlaneMaterial);
+            PlaneS.push(Plane);//Ex伪指针指向该几何体
+            //传入坐标
+            Plane.position.set(Point.x,Point.y+50,Point.z);
+            Plane.rotation.x=-0.5*Math.PI;
+            scene.add(Plane);
+
+            const BarGeometry = new THREE.BoxGeometry(10, 5, 10)
+            //颜色设置
+            const BarMaterial = new THREE.MeshPhysicalMaterial({
+                color: color_array[Math.floor(Heights[0]/100)-3]
+            })
+            const bar = new THREE.Mesh(BarGeometry, BarMaterial)
+            Bars.push(bar);
+            bar.position.copy(Plane.position)
+            scene.add(bar)
+            bar_array.push(bar)
+            //平面延展
+            PlaneExTween(Plane,bar,Heights,color_array);
+
+        }
+        //存放平面坐标数组
+        for (let i=0;i<10;i++){
+            //传入生成平面的坐标
+            initBar(location_array[i], height_array[i])
+        }
+
+
+    }
+    var Function3_front=(obj)=>{
+
+        CameraToOriginTween(camera);
+        setTimeout(SelectionTips,5000);
+        const texture =new THREE.TextureLoader().load("路径规划/选点.png");
+        const SelectionBoxMaterial=new THREE.SpriteMaterial({map:texture});
+        const Selection =new THREE.Sprite(SelectionBoxMaterial);
+        function SelectionTips() {
+            Selection.position.set(-509,9,356);
+            Selection.scale.set(200,100,1);
+            scene.add(Selection);
+        }
+        setTimeout(Delete,6000);//提醒持续时长 实际时长 +5000
+        function Delete(){
+            Selection.material.dispose();
+            Selection.geometry.dispose();
+            scene.remove(Selection);
+        }
+    }
+    var Function3_back = () => {
+        const left = [];
+        const right = [];
+        function LoadLeft() {
+            left.push(new THREE.Vector3(-414, -40, 323));
+            left.push(new THREE.Vector3(-412, -40, 333));
+            left.push(new THREE.Vector3(-413, -40, 345));
+            left.push(new THREE.Vector3(-418, -40, 354));
+            left.push(new THREE.Vector3(-428, -40, 363));
+            left.push(new THREE.Vector3(-440, -40, 369));
+            left.push(new THREE.Vector3(-449, -40, 375));
+            left.push(new THREE.Vector3(-460, -40, 392));
+            left.push(new THREE.Vector3(-474, -40, 403));
+            left.push(new THREE.Vector3(-485, -40, 414));//10
+            left.push(new THREE.Vector3(-492, -40, 427));
+            left.push(new THREE.Vector3(-496, -40, 437));
+            left.push(new THREE.Vector3(-501, -40, 442));
+            left.push(new THREE.Vector3(-539, -40, 463));
+            left.push(new THREE.Vector3(-557, -40, 473));
+            left.push(new THREE.Vector3(-571, -40, 480));
+            left.push(new THREE.Vector3(-582, -40, 482));
+            left.push(new THREE.Vector3(-608, -40, 481));
+            left.push(new THREE.Vector3(-628, -40, 482));
+            left.push(new THREE.Vector3(-642, -40, 483));//20
+            left.push(new THREE.Vector3(-658, -40, 487));
+            left.push(new THREE.Vector3(-678, -40, 487));
+            left.push(new THREE.Vector3(-699, -40, 475));
+            left.push(new THREE.Vector3(-712, -40, 466));
+            left.push(new THREE.Vector3(-730, -40, 458));
+            left.push(new THREE.Vector3(-747, -40, 448));
+            left.push(new THREE.Vector3(-760, -40, 442));//28
+        }
+        function LoadRight() {
+            right.push(new THREE.Vector3(-414, -40, 323));
+            right.push(new THREE.Vector3(-425, -40, 307));
+            right.push(new THREE.Vector3(-436, -40, 302));
+            right.push(new THREE.Vector3(-440, -40, 301));
+            right.push(new THREE.Vector3(-452, -40, 302));
+            right.push(new THREE.Vector3(-468, -40, 306));
+            right.push(new THREE.Vector3(-481, -40, 306));
+            right.push(new THREE.Vector3(-491, -40, 301));
+            right.push(new THREE.Vector3(-504, -40, 294));
+            right.push(new THREE.Vector3(-520, -40, 293));//10
+            right.push(new THREE.Vector3(-545, -40, 293));
+            right.push(new THREE.Vector3(-559, -40, 288));
+            right.push(new THREE.Vector3(-574, -40, 284));
+            right.push(new THREE.Vector3(-590, -40, 289));
+            right.push(new THREE.Vector3(-605, -40, 306));
+            right.push(new THREE.Vector3(-619, -40, 322));
+            right.push(new THREE.Vector3(-635, -40, 336));
+            right.push(new THREE.Vector3(-652, -40, 354));
+            right.push(new THREE.Vector3(-669, -40, 366));
+            right.push(new THREE.Vector3(-686, -40, 363));//20
+            right.push(new THREE.Vector3(-709, -40, 349));
+            right.push(new THREE.Vector3(-721, -40, 362));
+            right.push(new THREE.Vector3(-731, -40, 380));
+            right.push(new THREE.Vector3(-737, -40, 400));
+            right.push(new THREE.Vector3(-756, -40, 409));
+            right.push(new THREE.Vector3(-762, -40, 414));
+            right.push(new THREE.Vector3(-755, -40, 433));
+            right.push(new THREE.Vector3(-760, -40, 442));//28
+        }
+        LoadRight();
+        LoadLeft();
+        const CreatGradualRenderingModel = (PointsArray, Color1 = "#000000", Color2 = "#000000", segments = 100) => {
+            //第一个参数为点集(Vector3)数组，第二个为线条颜色，第三个参数为分段数，返回为一个Mesh
+            const pointsArray = PointsArray || [];
+            if (pointsArray === []) {
+                console.log("CreatGradualRenderingModelha函数参数数组为空");
+                return;
+            }
+            const curve = new THREE.CatmullRomCurve3(pointsArray);
+            const points = curve.getSpacedPoints(segments); //分段数segments，返回segments+1个顶点
+            const geometry = new THREE.BufferGeometry();
+            const verticesArr = [];//获取geometry所有顶点坐标存入数组
+            points.forEach(function (vector3) {
+                verticesArr.push(vector3.x, vector3.y, vector3.z)
+            })
+            const attribute = new THREE.BufferAttribute(new Float32Array(verticesArr), 3); //3个为一组，表示一个顶点的xyz坐标
+            geometry.attributes.position = attribute;
+            // geometry.setFromPoints(points);
+            var ColorArray = [];
+            for (let i = 0; i < points.length; i++) {
+                if (i < points.length / 2) {
+                    const c1 = new THREE.Color(Color1);
+                    ColorArray.push(c1.r, c1.g, c1.b);
+                } else if (i > 3 * points.length / 5) {
+                    const c1 = new THREE.Color(Color1);
+                    ColorArray.push(c1.r, c1.g, c1.b);
+                } else {
+                    const c2 = new THREE.Color(Color2);
+                    ColorArray.push(c2.r, c2.g, c2.b);
+                }
+            }
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(ColorArray, 3));
+            const material = new THREE.LineBasicMaterial({vertexColors: THREE.VertexColors});//轨迹颜色
+            const Mesh = new THREE.Line(geometry, material);
+            return Mesh;
+        }//方法
+        Start();
+        setTimeout(CongestionWarn,3000);
+        setTimeout(End,16000);
+        function Start() {
+            leftLine = CreatGradualRenderingModel(left, "#181d4b", "#ff0000");
+            function CreatRight(){
+                rightLine = CreatGradualRenderingModel(right,"#37ff00","#37ff00");
+                scene.add(rightLine);
+            }
+            setTimeout(CreatRight,7000);
+            scene.add(leftLine);
+        }
+        function End() {
+            DeleteWarn();
+            CameraReturnTween(camera);
+            if(place_clicked1) {
+                const texture1 =new THREE.TextureLoader().load("路径规划/鲸鲨馆.png");
+                const newMaterial1 =new THREE.SpriteMaterial({map:texture1});
+                place1.material = newMaterial1;
+                place1.material.map.needsUpdate = true;
+            }
+            if(place_clicked2) {
+                const texture2 =new THREE.TextureLoader().load("路径规划/深海世界.png");
+                const newMaterial2 =new THREE.SpriteMaterial({map:texture2});
+                place2.material = newMaterial2;
+                place2.material.map.needsUpdate = true;
+            }
+            place_clicked1 =false;
+            place_clicked2 =false;
+            MenuFunctionFlag = true;
+            LineLoad = false;
+        }
+
+
+    }
+    var Function4 = (obj) => {
+        var LoadingData = () => {
+            const textureLoader = new THREE.TextureLoader().load("地图.png");
+            textureLoader.wrapS = THREE.RepeatWrapping;//用于水平包裹
+            textureLoader.wrapT = THREE.RepeatWrapping;//用于垂直包裹
+            const PlaneGeometry = new THREE.PlaneGeometry(650, 360, 1, 1);
+            const PlaneMaterial = new THREE.MeshPhongMaterial({
+                transparent: true,
+                map: textureLoader,
+                side: THREE.DoubleSide
+            });
+            const Plane1 = new THREE.Mesh(PlaneGeometry, PlaneMaterial);
+            //调Y轴
+            Plane1.position.set(1549,2186, 200);//1926
+            Plane1.rotation.set(0, 5.1, 0);
+            Plane1.Name="粉"
+            scene.add(Plane1);
+            Ads.push(Plane1);
+            const weather=["多云",'大雪','晴天','阴','雷阵雨','雾'];
+            const textureLoader2 = new THREE.TextureLoader().load("./天气图/"+weather[Math.floor(Math.random()*6)]+".png");
+            textureLoader2.wrapS = THREE.RepeatWrapping;//用于水平包裹
+            textureLoader2.wrapT = THREE.RepeatWrapping;//用于垂直包裹
+            const PlaneGeometry2 = new THREE.PlaneGeometry(740, 480, 1, 1);
+            const PlaneMaterial2 = new THREE.MeshBasicMaterial({
+                transparent: true,
+                map: textureLoader2,
+                side: THREE.DoubleSide
+            });
+            const Plane2 = new THREE.Mesh(PlaneGeometry2, PlaneMaterial2);
+            //调Y轴
+            Plane2.position.set(1456, 2360, -1046);//1926
+            Plane2.rotation.set(0, 5.61, 0);
+            Plane2.Name="白"
+            scene.add(Plane2);
+            Ads.push(Plane2);
+           // datGui.add(Plane2.position,'x',-1000,1000);
+           // datGui.add(Plane2.position,'y',-1000,1000);
+           // datGui.add(Plane2.position,'z',-1000,1000);
+            const textureLoader3 = new THREE.TextureLoader().load("地图.png");
+            textureLoader3.wrapS = THREE.RepeatWrapping;//用于水平包裹
+            textureLoader3.wrapT = THREE.RepeatWrapping;//用于垂直包裹
+            const PlaneGeometry3 = new THREE.PlaneGeometry(650, 360, 1, 1);
+            const PlaneMaterial3 = new THREE.MeshPhongMaterial({
+                transparent: true,
+                map: textureLoader3,
+                side: THREE.DoubleSide
+            });
+            const Plane3 = new THREE.Mesh(PlaneGeometry3, PlaneMaterial3);
+            //调Y轴
+            Plane3.position.set(145,2126, -961);//1926
+            Plane3.rotation.set(0, 6.29, 0);
+            Plane3.Name="蓝"
+            scene.add(Plane3);
+            Ads.push(Plane3);
+            AdDataCreatTween(Plane1, 296);
+            AdDataCreatTween(Plane2,470);
+            AdDataCreatTween(Plane3,296);
+        }
+        LoadingData();
+        var CreatBillboard = () => {
+            var boxLoader1 = new GLTFLoader(); //创建一个GLTF加载器
+            boxLoader1.setDRACOLoader(dracoLoader)
+            boxLoader1.load('./model/box1.gltf', (gltf) => {//左1
+                scene.add(gltf.scene);
+                gltf.scene.position.set(196, 1600, -1033)
+                // gltf.scene.rotation.set(-263, 136, -527)
+                gltf.scene.scale.set(70, 60, 40)
+                gltf.scene.Name="蓝B"
+                Ads.push(gltf.scene);
+                AdCreatTween(gltf.scene);
+            })
+            var boxLoader2 = new GLTFLoader(); //创建一个GLTF加载器
+            boxLoader2.setDRACOLoader(dracoLoader)
+            boxLoader2.load('./model/box2.gltf', (gltf) => {//右1
+                scene.add(gltf.scene)
+                gltf.scene.position.set(1449, 1600, 195)
+                gltf.scene.rotation.set(0, -86, 0)
+                gltf.scene.scale.set(70, 60, 40)
+                gltf.scene.Name="粉C"
+                Ads.push(gltf.scene);
+                AdCreatTween(gltf.scene);
+            })
+            var boxLoader3 = new GLTFLoader(); //创建一个GLTF加载器
+            boxLoader3.setDRACOLoader(dracoLoader)
+            boxLoader3.load('./model/box3.gltf', (gltf) => {//中
+                scene.add(gltf.scene)
+                gltf.scene.position.set(1375, 1600, -1028)
+                gltf.scene.rotation.set(0, -41.5, 0);
+                gltf.scene.scale.set(80, 80, 40);
+                gltf.scene.Name="白A"
+                Ads.push(gltf.scene);
+                AdCreatTween(gltf.scene);
+            })
+        }
+        CreatBillboard();
+    }
+    var Function5 = () => {
+    }
+    /**
+     **-----------------------------------------菜单功能区-------------------------------------------------------------------------------------------------------------------
+     * */
+    /**
+     **-------------------------------------------动画区-----------------------------------------------------------------------------------------------------------------
+     * */
+        //物体运动动画
+    var TweenCloud = (obj) => {
+            const v = obj.position;
+            const Back = new THREE.Vector3(v.x, v.y, v.z)
+            if(Tips.length>0)
+            {
+
+                Tips.forEach(function (tip) {
+                    if(tip.Name===obj.Display)
+                    {
+                        const tween_tips_opacity =new TWEEN.Tween(tip.material).to({opacity:0},500);
+                        tween_tips_opacity.start();
+                        setTimeout(f,16000);
+                        function f() {
+                            const tween_tips_opacity_return = new TWEEN.Tween(tip.material).to({opacity:1},500);
+                            tween_tips_opacity_return.start();
+                        }
+                    }
+                })
+            }
+            //坐标动画
+            const tween_position = new TWEEN.Tween(obj.position);
+            tween_position.to({x: -150, y: 20, z: 120}, 2000).easing(TWEEN.Easing.Sinusoidal.InOut)
+            tween_position.start();
+            //旋转动画
+            const tween_rotation = new TWEEN.Tween(obj.rotation);
+            tween_rotation.to({y: -7}, 2000).easing(TWEEN.Easing.Sinusoidal.InOut)
+            tween_rotation.start();
+            //自转动画
+            const tween_selfRotation = new TWEEN.Tween(obj.rotation);
+            tween_selfRotation.to({y: -17}, 10000).onComplete(function () {
+                TweenBack();
+            });
+            tween_position.chain(tween_selfRotation);
+            //返回原位置
+            function TweenBack() {
+                var tween_position_back = new TWEEN.Tween(obj.position);
+                tween_position_back.to({x: Back.x, y: Back.y, z: Back.z}, 4000)
+
+                var tween_rotation_back = new TWEEN.Tween(obj.rotation);
+                tween_rotation_back.to({y: -1}, 4000).onComplete(function () {
+                    CloudRunFlag = true;
+                })
+                tween_position_back.start();
+                tween_rotation_back.start();
+            }
+            function NoTra() {
+                initWord(obj);
+            }
+            setTimeout(DeleteWordClouds, 10000);//词云淡出延时
+            setTimeout(NoTra, 2300);//词云淡入延时
+        }
+    //词云生成动画
+    var CreatWordTween = (obj) => {
+        const tween_word_creat = new TWEEN.Tween(obj.material).to({opacity: 1}, 2000);
+        tween_word_creat.start();
+    }
+    //词云销毁动画
+    var WordCloudDeleteTween = (obj) => {
+        const tween_word_cloud_delete = new TWEEN.Tween(obj.material).to({opacity: 0}, 2000);
+        tween_word_cloud_delete.start();
+    }
+    //云生成动画
+    var CloudCreatTween = (obj) => {
+        const tween_creat_cloud = new TWEEN.Tween(obj.material).to({opacity: 1}, 2000);
+        tween_creat_cloud.start();
+    }
+    //云销毁动画
+    var DeleteCloudsTween = (obj) => {
+        console.log(obj);
+        const tween_cloud_delete = new TWEEN.Tween(obj.material).to({opacity: 0}, 2000);
+        tween_cloud_delete.start();
+    }
+    //广告框生成动画
+    var AdCreatTween = (obj) => {
+        const tween_creat_ad = new TWEEN.Tween(obj.position).to({y: -230}, 2000).easing(TWEEN.Easing.Exponential.In);
+        tween_creat_ad.start();
+    }
+    //广告框销毁动画
+    var DeleteAdTween = (obj) => {
+        const tween_delete_ad_position = new TWEEN.Tween(obj.position).to({y: 1600}, 5000).easing(TWEEN.Easing.Exponential.Out);
+        tween_delete_ad_position.start();
+    }
+    //功能3相机移动动画
+    var CameraToOriginTween = (obj) => {
+        const tween_camera_position2 = new TWEEN.Tween(obj.position).to({
+            x: -300,
+            y: 192,
+            z: 274
+        }, 3000).onUpdate(function () {
+            camera.lookAt(new THREE.Vector3(-589, -33, 376));
+        });
+        const Target ={
+            X:0,
+            Y:0,
+            Z:0
+        }
+        const tween_camera_position =new TWEEN.Tween(Target).to({X:-589,Y:-33,Z:376},2000).onUpdate(function () {
+            camera.lookAt((new THREE.Vector3(Target.X,Target.Y,Target.Z)));
+        })
+        tween_camera_position.start();
+        tween_camera_position.chain(tween_camera_position2);
+    };
+    //广告数据加载动画
+    var AdDataCreatTween = (obj, y) => {//plane ,y坐标
+        const tween_creat_ad_data = new TWEEN.Tween(obj.position).to({y: y}, 2000).easing(TWEEN.Easing.Exponential.In);
+        tween_creat_ad_data.start();
+    }
+    //功能3展示完成相机返回动画
+    var CameraReturnTween=(obj)=>{
+        const tween_camera_return1 = new TWEEN.Tween(obj.position).to({x:OriginPosition_Menu.x,y:OriginPosition_Menu.y,z:OriginPosition_Menu.z},3000).onUpdate(function () {
+            camera.lookAt(new THREE.Vector3(-589, -33, 376));
+        })
+        const Target ={
+            X:-589,
+            Y:-33,
+            Z:376
+        }
+        const tween_camera_return2 =new TWEEN.Tween(Target).to({X:0,Y:0,Z:0},2000).onUpdate(function () {
+        camera.lookAt((new THREE.Vector3(Target.X,Target.Y,Target.Z)));
+        })
+        tween_camera_return1.start();
+        tween_camera_return1.chain(tween_camera_return2);
+        DeleteLine();
+        setTimeout(CreatMenu,6000);
+    }
+    //人数拥挤警告框浮动动画
+    var FloatWarnTween=(obj)=>{
+        const tween_float_warn_for_bottom =new TWEEN.Tween(obj.position).to({y:60}).easing(TWEEN.Easing.Sinusoidal.InOut);
+        const tween_float_warn_for_top =new TWEEN.Tween(obj.position).to({y:80}).easing(TWEEN.Easing.Sinusoidal.InOut);
+        tween_float_warn_for_bottom.start();
+        tween_float_warn_for_bottom.chain(tween_float_warn_for_top);
+        tween_float_warn_for_top.chain(tween_float_warn_for_bottom);
+    }
+    //平面延展动画
+    var PlaneExTween=(Plane,bar,Heights,Colors)=>{
+        const tween_Plane_Extend = new TWEEN.Tween(Plane.scale).to({x: 30,y:30}, 200);//创建一段tween动画1
+        const height = {s: 0}
+
+        const tween_boxHeight_Extend = new TWEEN.Tween(height).to({s:Heights[0]/6}, 200).onUpdate(function () {//2
+                bar.scale.y = height.s/4;
+                bar.position.y  = Plane.position.y + 5*height.s/8;
+            })
+        tween_Plane_Extend.chain(tween_boxHeight_Extend);
+        //传入高度
+       const tweenArr = [];
+        for(let i=1;i<Heights.length;i++){
+            var tween_height_update = new TWEEN.Tween(height).to({s: Heights[i]/6}, 200).onUpdate(function () {//3
+                    bar.scale.y = height.s/4;
+                    bar.position.y  = Plane.position.y + 5*height.s/8;
+                }).delay(2000).onStart(function () {
+                bar.material.color = new THREE.Color(Colors[Math.floor(Heights[i]/100)-3])
+                bar.material.needsUpdate=true;
+            })//延时两秒切换
+            tweenArr.push(tween_height_update)
+        }
+        tween_boxHeight_Extend.chain(tweenArr[0])
+        for (let i=0;i<tweenArr.length - 1;i++){
+            tweenArr[i].chain(tweenArr[i + 1])
+            if(i===tweenArr.length-2&&(!MenuFunctionFlag)) {
+                tweenArr[i].onComplete(function () {
+                DeleteBar();
+                    BarLoad=false;
+                ShowCompleteTween(camera);
+                })
+
+                MenuFunctionFlag=true;
+            }
+        }
+        tween_Plane_Extend.start();//tween动画开始执行(你可以选择合适的时候触发执行)
+    }
+    //销毁展示数据框下面的平面
+    var DeletePlaneTween=(obj)=>{
+        const tween_Plane_Extend_return = new TWEEN.Tween(obj.scale).to({x: 1,y:1}, 200);
+        tween_Plane_Extend_return.start();
+    }
+    //销毁数据展示框动画
+    var DeleteBarTween=(obj)=>{
+        const tween_boxHeight_Return_scale = new TWEEN.Tween(obj.scale).to({y:0}, 200)
+        const tween_boxHeight_Return_height = new TWEEN.Tween(obj.position).to({y:0}, 200)
+        tween_boxHeight_Return_scale.start();
+        tween_boxHeight_Return_height.start();
+    }
+    //功能2展示完成相机动画
+    var ShowCompleteTween=(obj)=>{
+        const tween_camera_return =new TWEEN.Tween(obj.position).to({x:OriginPosition_Menu.x,y:OriginPosition_Menu.y,z:OriginPosition_Menu.z},2000).onUpdate(function () {
+            camera.lookAt(new THREE.Vector3(0,0,0));
+        }).onComplete(function () {
+            angle =0;
+        })
+        tween_camera_return.start();
+        setTimeout(CreatMenu,3000);
+    }
+    //让广告框移动到相机面前
+    var AdRunTween = (obj)=>{
+        if(Ads.length>0)
+        {
+            Ads.forEach(function (ad) {
+                if(ad.Name===obj.Name+"A")
+                {
+
+                    const tween_ad_position = new TWEEN.Tween(ad.position).to({x:-7,y:-200,z:-7},3000);
+                    const tween_ad_rotation = new TWEEN.Tween(ad.rotation).to({y:-41.74},3000);
+                    tween_ad_rotation.start();
+                    tween_ad_position.start();
+                    const tween_ad_run = new TWEEN.Tween(obj.position).to({x:81,y:496,z:-14},3000);
+                    const tween_ad_run_rotation = new TWEEN.Tween(obj.rotation).to({y:5.38},3000);
+                    tween_ad_run_rotation.start();
+                    tween_ad_run.start();
+                }
+                else if(ad.Name===obj.Name+"C")
+                {
+
+                }
+                else if(ad.Name===obj.Name+"B")
+                {
+                    // console.log("ad = ",ad.position,ad.rotation);
+                    // console.log("obj = ",obj.position,obj.rotation);
+                    const tween_ad_position = new TWEEN.Tween(ad.position).to({x:-269,y:-206,z:366},3000);
+                    const tween_ad_rotation = new TWEEN.Tween(ad.rotation).to({y:-0.97},3000);
+                    tween_ad_rotation.start();
+                    tween_ad_position.start();
+                    const tween_ad_run = new TWEEN.Tween(obj.position).to({x:-363,y:319,z:378},3000);
+                    const tween_ad_run_rotation = new TWEEN.Tween(obj.rotation).to({y:5.29},3000);
+                    tween_ad_run_rotation.start();
+                    tween_ad_run.start();
+                }
+            })
+        }
+    }
+    //让广告框从相机面前移动到原位置
+    var AdReturnTween = (obj)=>{
+        if(Ads.length>0)
+        {
+            Ads.forEach(function (ad) {
+                if(ad.Name===obj.Name+"A")
+                {
+                    const tween_ad_position = new TWEEN.Tween(ad.position).to({x:1375,y:-230,z:-1028},3000);
+                    const tween_ad_rotation = new TWEEN.Tween(ad.rotation).to({y:-41.5},3000);
+                    tween_ad_rotation.start();
+                    tween_ad_position.start();
+
+                    const tween_ad_run = new TWEEN.Tween(obj.position).to({x:1456,y:470,z:-1046},3000);
+                    const tween_ad_run_rotation = new TWEEN.Tween(obj.rotation).to({y:5.61},3000);
+                    tween_ad_run_rotation.start();
+                    tween_ad_run.start();
+
+                }
+                else if(ad.Name===obj.Name+"C")
+                {
+                    //  datGui.add(ad.position,'x',-300,300).listen();
+                    //  datGui.add(ad.position,'y',-400,0).listen();
+                    //  datGui.add(ad.position,'z',-300,400).listen();
+                    //  datGui.add(ad.rotation,'y',-90,-80,0.01).name("rotation_y");
+                    //  const tween_ad_position = new TWEEN.Tween(ad.position).to({x:-300,y:-200,z:222},3000);
+                    //  const tween_ad_rotation = new TWEEN.Tween(ad.rotation).to({y:-88.83},3000);
+                    //  tween_ad_rotation.start();
+                    //  tween_ad_position.start();
+                    //  const tween_ad_run = new TWEEN.Tween(obj.position).to({x:81,y:496,z:-14},3000);
+                    //  const tween_ad_run_rotation = new TWEEN.Tween(obj.rotation).to({y:5.38},3000);
+                    //  tween_ad_run_rotation.start();
+                    //  tween_ad_run.start();
+                }
+                else if(ad.Name===obj.Name+"B")
+                {
+                      const tween_ad_position = new TWEEN.Tween(ad.position).to({x:196,y:-230,z:-1033},3000);
+                      const tween_ad_rotation = new TWEEN.Tween(ad.rotation).to({y:0},3000);
+                      tween_ad_rotation.start();
+                      tween_ad_position.start();
+                      const tween_ad_run = new TWEEN.Tween(obj.position).to({x:145,y:296,z:-961},3000);
+                      const tween_ad_run_rotation = new TWEEN.Tween(obj.rotation).to({y:6.29},3000);
+                      tween_ad_run_rotation.start();
+                      tween_ad_run.start();
+                }
+            })
+        }
+
+    }
+    /**
+     **-------------------------------------------动画区----------------------------------------------------------------------------------------------------------------------
+     * */
+    /**
+     **-------------------------------------------销毁区-----------------------------------------------------------------------------------------------------------------
+     * */
+        //销毁词云
+    const DeleteWordClouds = () => {
+            group_word.children.forEach(function (obj) {
+                WordCloudDeleteTween(obj);
+            })
+            setTimeout(Remove, 3000);
+
+            function Remove() {
+                group_word.children.forEach(function (e) {
+                    e.material.dispose();
+                    e.geometry.dispose();
+                })
+                scene.remove(group_word);
+                group_word ="";
+            }
+        }
+    //销毁云
+    const DeleteClouds = () => {
+        const material = new THREE.MeshBasicMaterial({color: "#ffffff", transparent: true, opacity: 1})
+        Clouds.forEach(function (obj) {
+            obj.children[0].children[0].material = material;
+            DeleteCloudsTween(obj.children[0].children[0]);
+        })
+        setTimeout(DelClouds, 2000);
+        setTimeout(DelTips, 2000);
+        if(Tips)
+        {
+            Tips.forEach(function (tip) {
+                DeleteCloudsTween(tip);
+            })
+        }
+        function DelTips() {
+            Tips.forEach(function (tip) {
+                tip.geometry.dispose();
+                tip.material.dispose();
+                scene.remove(tip);
+            })
+            Tips=[];
+        }
+        function DelClouds() {
+            Clouds.forEach(function (object) {
+                object.children[0].children[0].geometry.dispose();
+                object.children[0].children[0].material.dispose();
+                scene.remove(object);
+            })
+            Clouds=[];
+        }
+    }
+    //销毁广告框
+    var DeleteAd = () => {
+        Ads.forEach(function (obj) {
+            DeleteAdTween(obj);
+        })
+        setTimeout(DeleteAd, 2000);
+
+        function DeleteAd() {
+            Ads.forEach(function (obj) {
+                if (obj.children > 0) {
+                    obj.children.forEach(function (child) {
+                        child.generateMipmaps.dispose();
+                        child.material.dispose();
+                    })
+                }
+                scene.remove(obj);
+            })
+            Ads=[];
+        }
+    }
+    //销毁线
+    var DeleteLine = () => {
+        if (leftLine) {
+            leftLine.geometry.dispose();
+            leftLine.material.dispose();
+            scene.remove(leftLine);
+            leftLine ="";
+        }
+        if (rightLine) {
+            rightLine.geometry.dispose();
+            rightLine.material.dispose();
+            scene.remove(rightLine);
+            rightLine =""
+        }
+        num_left = 0;
+        num_right = 0;
+    }
+    //销毁菜单框
+    var DeleteMenu = () => {
+        if (sprite_Menu) {
+            sprite_Menu.geometry.dispose();
+            sprite_Menu.material.dispose();
+            scene.remove(sprite_Menu);
+            sprite_Menu ="";
+        }
+        if (Sprites.length > 0) {
+            const j = Sprites.length - 1;
+            for (let i = j; i >= 0; i--) {
+                Sprites[i].geometry.dispose();
+                Sprites[i].material.dispose();
+                scene.remove(Sprites[i]);
+                Sprites.pop();
+            }
+            Sprites=[];
+        }
+    }
+    //销毁警告框
+    var DeleteWarn =()=>{
+        if(WarnSprite instanceof THREE.Sprite)
+        {
+            WarnSprite.geometry.dispose();
+            WarnSprite.material.dispose();
+            scene.remove(WarnSprite);
+            WarnSprite="";
+        }
+    }
+    //销毁功能2的数据展示平面
+    var DeleteBar=()=>{
+        if(PlaneS.length>0)
+        {
+            PlaneS.forEach(function (plane) {
+                DeletePlaneTween(plane);
+                setTimeout(deletePlane,300);
+                function deletePlane() {
+                    plane.geometry.dispose();
+                    plane.material.dispose();
+                    scene.remove(plane);
+                }
+            })
+            PlaneS=[];
+        }
+        if(Bars.length>0)
+        {
+            Bars.forEach(function (child) {
+                DeleteBarTween(child);
+                setTimeout(deleteBar,200);
+                function deleteBar() {
+                    child.geometry.dispose();
+                    child.material.dispose();
+                    scene.remove(child);
+                }
+            })
+            Bars =[];
+        }
+    }
+    /**
+     **----------------------------------------------销毁区----------------------------------------------------------------------------------------------
+     * */
+    /**
+     * ---------------------------------------------模型加载区-----------------------------------------------------------------------------------------------------------------
+     * */
+    //地图加载
+    var CreatMap = () => {
+            var gltfLoader = new GLTFLoader(); //创建一个GLTF加载器
+
+            gltfLoader.setDRACOLoader(dracoLoader)
+            gltfLoader.load('./model/2.gltf', (gltf) => {
+                scene.add(gltf.scene);
+                //  console.log(gltf.scene);
+                var box3 = new THREE.Box3();
+                box3.expandByObject(gltf.scene)
+                //调整位置
+                var center = new THREE.Vector3()
+                box3.getCenter(center)
+                gltf.scene.position.x -= center.x
+                gltf.scene.position.y -= center.y
+                gltf.scene.position.z -= center.z
+                //加载完模型后加载图表
+                // initChart()
+            });
+        }
+    CreatMap();
+    var sprite_Menu;
+    var Sprites = []
+    var CreatMenu = () => {
+        const texture = new THREE.TextureLoader().load("meun.png");
+        const spriteMaterial = new THREE.SpriteMaterial({
+            map: texture
+        });
+        sprite_Menu = new THREE.Sprite(spriteMaterial);
+        sprite_Menu.position.set(-700, 300, -180);
+        sprite_Menu.scale.set(300, 300, 1);
+        spriteMaterial.map.needsUpdate = true;
+        scene.add(sprite_Menu);
+        for (let i = 0; i < 4; i++) {
+            const liSpriteMaterial = new THREE.SpriteMaterial({
+                // color:"#f00000",
+                map: new THREE.TextureLoader().load("Word Cloud/" + (i + 1) + ".png")
+            });
+            let Sprite = new THREE.Sprite(liSpriteMaterial);
+            Sprite.Name = "function" + (i + 1);//设置名字
+            Sprite.position.copy(sprite_Menu.position);
+            Sprite.position.y += 20;
+            Sprite.position.z += 300;
+
+            Sprites.push(Sprite);
+        }
+        for (let i = 0; i < 4; i++) {
+            if (i === 0 || i === 3) {
+                Sprites[i].scale.set(300, 50, 1);
+                Sprites[i].position.z -= 36 * i;
+                Sprites[i].position.y -= 33 * i;
+            } else if (i === 1) {
+                Sprites[i].scale.set(180, 50, 1);
+                Sprites[i].position.z -= 250 * i;
+                Sprites[i].position.y -= 24 * i;
+            } else {
+                Sprites[i].scale.set(250, 50, 1);
+                Sprites[i].position.z -= 70 * i;
+                Sprites[i].position.y -= 31* i;
+            }
+            scene.add(Sprites[i]);
+        }
+    }
+    CreatMenu();
+    //词云加载
+    var group_word;
+    var initWord = (obj) => {
+        //帝企鹅自助餐厅
+        //国际马戏城
+        //海豚花园餐厅
+        //海洋王国
+        var Jsons = [];
+        if (obj.Display === '帝企鹅自助餐厅') Jsons = arr_json0;//左1
+        else if (obj.Display === '国际马戏城') Jsons = arr_json1;//左2
+        else if (obj.Display === '横琴湾酒店') Jsons = arr_json5;//右1
+        else if (obj.Display === '海洋王国') Jsons = arr_json3;//右2
+        console.log(obj.Display);
+        console.log(Jsons);
+        group_word = new THREE.Group()
+        console.log(Jsons.length)
+        for (let i = 0, l = Jsons.length; i < l; i++) {
+
+            var phi = Math.acos(-1 + (2 * i) / l);
+            var theta = Math.sqrt(l * Math.PI) * phi;
+            var sprite = createS(i, Jsons);
+
+            sprite.scale.set(300, 150, 1);
+            sprite.position.setFromSphericalCoords(800, phi, theta)
+            //sphere.push(sprite)
+            group_word.add(sprite);
+        }
+        group_word.scale.set(1 / 5, 1 / 5, 1 / 5)
+        //group_word.position.copy(obj.position)
+        if (obj.Display === '海洋王国')
+            group_word.position.set(-150, 299, 120);
+        else
+            group_word.position.set(-150, 319, 120);
+        // group_word.translateY (200)
+        // datGui.add(group_word.position,'y',-1000,1000);
+        // datGui.add(group_word.position,'x',-1000,1000);
+        // datGui.add(group_word.position,'z',-1000,1000);
+        // group_word.translateZ(800)
+        scene.add(group_word);
+        group_word.children.forEach(function (obj) {
+            CreatWordTween(obj);
+        })
+    }
+    var createS = (num, JsArray) => {
+        // 将文字放在画布中间
+        function makeTextCanvas(text, width, height) {
+            var canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            var c = canvas.getContext("2d");
+            // c.fillStyle = "#FF0000";
+            // c.fillRect(0, 0, width, height);
+            c.clearRect(0, 0, canvas.width, canvas.height);
+            // 文字
+            c.beginPath();
+            c.translate(width / 2, height / 2);
+
+            const ColorArray = ["#efcbd2", "#aaf1c4", "#90eae3", "#c9ade2",
+                "#dcdeaf", "#a8efae", "#ade7bc", "#b3c9ef"];
+            c.fillStyle = ColorArray[Math.floor(Math.random() * 8)]; //文本填充颜色
+            c.font = "900 80px 宋体"; //字体样式设置
+            c.textBaseline = "middle"; //文本与fillText定义的纵坐标
+            c.textAlign = "center"; //文本居中(以fillText定义的横坐标)
+            c.fillText(text, 0, 0);
+            // document.body.appendChild(canvas)
+            return c.canvas;
+        }
+        var textCanvas = makeTextCanvas(JsArray[num].name, JsArray[num].number / 10, JsArray[num].number / 20);
+        var texture = new THREE.CanvasTexture(textCanvas);
+        texture.generateMipmaps = false;
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        let pinMaterial = new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
+            opacity: 0
+        });
+        let mesh = new THREE.Sprite(pinMaterial);
+        return mesh
+    }
+    //地标加载
+    var Landmarks = {
+        "冰山过山车": {url: '地标/冰山过山车.png', Point: new THREE.Vector3(-583, -10, 654),id:0},
+        "横琴海": {url: '地标/横琴海.png', Point: new THREE.Vector3(-617, -22, 384),id:0},
+        "海洋大街": {url: '地标/海洋大街.png', Point: new THREE.Vector3(-213, -13, 476),id:3},
+        "海牛馆": {url: '地标/海牛馆.png', Point: new THREE.Vector3(-715, 0, 239),id:0},
+        "海狮剧场": {url: '地标/海狮剧场.png', Point: new THREE.Vector3(-213, -13, 232),id:0},
+        "海豚转转车": {url: '地标/海豚转转车.png', Point: new THREE.Vector3(-446, -22, 193),id:0},
+        "白鲸剧场": {url: '地标/白鲸剧场.png', Point: new THREE.Vector3(-724, -17, 607),id:0},
+        "鲸鲨馆": {url: '地标/鲸鲨馆.png', Point: new THREE.Vector3(-819, -30, 441),id:1},
+        "横琴湾酒店": {url: '地标/横琴湾酒店.png', Point: new THREE.Vector3(611, 0, 180),id:0},
+        "深海世界": {url: '地标/深海世界.png', Point: new THREE.Vector3(-375, 0, 320),id:2}
+    };
+    var LandmarkLoading = () => {
+        const TextureLoader = new THREE.TextureLoader();
+        for (const img of Object.values(Landmarks)) {
+            TextureLoader.load(img.url, (Img) => {
+                const LandmarkSpriteMaterial = new THREE.SpriteMaterial({
+                    map: Img
+                })
+                const LandmarkSprite = new THREE.Sprite(LandmarkSpriteMaterial);
+                LandmarkSprite.position.copy(img.Point);
+                LandmarkSprite.scale.set(150, 60, 1);
+                if(img.id ===1)
+                    LandmarkSprite.Name="鲸鲨馆";
+                if(img.id ===2)
+                    LandmarkSprite.Name="深海世界";
+                if(img.id===3)
+                    LandmarkSprite.Name="海洋大街";
+                scene.add(LandmarkSprite);
+            });
+        }
+    }
+    LandmarkLoading();
+    //道路拥挤提示标识加载
+    var WarnSprite;
+    var CongestionWarn=()=>{
+        const WarnTexture =new THREE.TextureLoader().load("道路拥挤_new.png");
+        const WarnMaterial =new THREE.SpriteMaterial({
+            map:WarnTexture
+        })
+        WarnSprite =new THREE.Sprite(WarnMaterial);
+        WarnSprite.position.set(-570,80,458);
+        WarnSprite.scale.set(200,200,1);
+        scene.add(WarnSprite);
+        FloatWarnTween(WarnSprite);
+    }
+    var CreatVRBrowse=()=>{
+        const texture =new THREE.TextureLoader().load("景区总览.png");
+        const VRSpriteMaterial =new THREE.SpriteMaterial({map:texture});
+        const VRSprite =new THREE.Sprite(VRSpriteMaterial);
+        VRSprite.Name ="全景浏览";
+        VRSprite.scale.set(200,100,1);
+        VRSprite.position.set(-246,140,304);
+        scene.add(VRSprite);
+    }
+    CreatVRBrowse();
+
+    /**
+     * ---------------------------------------------模型加载区-----------------------------------------------------------------------------------------------------------------
+     * */
+        //状态监听
+    const stats = new Stats();
+    stats.domElement.style.position = 'absolute';
+    stats.domElement.style.top = '0px';
+    container.appendChild(stats.domElement);
+    const spheres = [];
+    window.addEventListener('resize', onWindowResize);
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    /**
+     * 手柄交互代码
+     * @param event
+     */
+    function onSelectStart( event ) {
+
+        const controller = event.target;
+
+        const intersections = getIntersections( controller );
+
+        if ( intersections.length > 0 ) {
+
+            const intersection = intersections[ 0 ];
+
+            // const object = intersection.object;
+            // object.material.emissive.b = 1;
+            // controller.attach( object );
+
+            controller.userData.selected = object;
+
+        }
+
+    }
+
+    function onSelectEnd( event ) {
+
+        const controller = event.target;
+
+        if ( controller.userData.selected !== undefined ) {
+
+            const object = controller.userData.selected;
+            // object.material.emissive.b = 0;
+            // group.attach( object );
+
+            controller.userData.selected = undefined;
+
+        }
+
+
+    }
+
+    function getIntersections( controller ) {
+
+        tempMatrix.identity().extractRotation( controller.matrixWorld );
+
+        raycaster.ray.origin.setFromMatrixPosition( controller.matrixWorld );
+        raycaster.ray.direction.set( 0, 0, - 1 ).applyMatrix4( tempMatrix );
+        return raycaster.intersectObjects( [scene] );
+
+    }
+
+    function intersectObjects( controller ) {
+
+        // Do not highlight when already selected
+
+        if ( controller.userData.selected !== undefined ) return;
+
+        var line = controller.getObjectByName( 'line' );
+        const intersections = getIntersections( controller );
+
+        if ( intersections.length > 0 ) {
+
+            const intersects = intersections[ 0 ];
+
+            if (intersects.length !== 0)//name 控制功能种类，id控制生成销毁
+            {
+                const obj = intersects[0].object;
+                if (obj instanceof THREE.Sprite) {
+                    if (obj.Name === "function1" && (CloudLoad || MenuFunctionFlag)) {
+                        if (!CloudLoad) {
+                            Function1(obj);
+                            MenuFunctionFlag = false;
+                            CloudLoad = true;
+                        } else {
+                            DeleteClouds();
+                            MenuFunctionFlag = true;
+                            CloudLoad = false;
+                        }
+                    }
+                    else if (obj.Name === "function2" && (MenuFunctionFlag||BarLoad)) {
+                        if(!BarLoad){
+                            DeleteMenu();
+                            MenuFunctionFlag = false;
+                            BarLoad =true;
+                            Function2(obj);
+
+                        }
+                    }
+                    else if (obj.Name === "function3" && (LineLoad || MenuFunctionFlag)) {
+                        if (!LineLoad) {
+                            DeleteMenu();
+                            MenuFunctionFlag = false;
+                            LineLoad = true;
+                            Function3_front(obj);
+                        }
+                    }
+                    else if (obj.Name === "function4" && (AdLoad || MenuFunctionFlag)) {
+                        if (!AdLoad) {
+                            Function4(obj);
+                            MenuFunctionFlag = false;
+                            AdLoad = true;
+                        } else {
+                            DeleteAd();
+                            MenuFunctionFlag = true;
+                            AdLoad = false;
+                        }
+                    }
+                    else if (obj.Name==="鲸鲨馆"&&!MenuFunctionFlag&&LineLoad&&!place_clicked1 ){
+                        place_clicked1 =true;
+                        place1 = obj;
+                        const texture =new THREE.TextureLoader().load("路径规划/鲸鲨馆_click.png");
+                        const newMaterial =new THREE.SpriteMaterial({map:texture});
+                        obj.material = newMaterial;
+                        obj.material.map.needsUpdate = true;
+                        if( place_clicked1&& place_clicked2)
+                        {
+                            setTimeout(Function3_back,1000);
+                        }
+                        //更新画布
+                    }
+                    else if (obj.Name==="深海世界"&&!MenuFunctionFlag&&LineLoad&&!place_clicked2 ){
+                        place_clicked2 =true;
+                        place2 = obj;
+                        const texture =new THREE.TextureLoader().load("路径规划/深海世界_click.png");
+                        const newMaterial =new THREE.SpriteMaterial({map:texture});
+                        obj.material = newMaterial;
+                        obj.material.map.needsUpdate = true;
+
+                        if( place_clicked1&& place_clicked2)
+                        {
+                            setTimeout(Function3_back,1000);
+                        }
+                        //更新画布
+                    }
+                    else if(obj.Name==="全景浏览"&&MenuFunctionFlag) {
+                        window.open("./VR全景预览.html")
+                    }
+                    else if(obj.Name==="鲸鲨馆"&&MenuFunctionFlag){
+                        window.open("VR2.html")
+                    }
+                    else if(obj.Name==="海洋大街"&&MenuFunctionFlag)
+                    {
+                        window.open("VR1.html");
+                    }
+                    else {
+                        Function5(obj);
+                    }
+                } else if ((obj.Name === 'Cloud' || obj.Name === 'Cloud' || obj.Name === 'Cloud' || obj.Name === 'Cloud') && CloudRunFlag)//四朵云
+                {
+                    TweenCloud(obj);
+                    CloudRunFlag = false;
+                }
+                else if(Ads.indexOf(obj)!==-1)
+                {
+                    AdRunTween(obj);
+                }
+
+            }
+
+            line.scale.z = intersects.distance;
+
+        } else {
+
+            // line.scale.z = 5;
+
+        }
+
+    }
+
+    animate()
+
+    function animate() {
+        intersectObjects(controller1)
+        intersectObjects(controller2)
+        if (leftLine) {
+            num_left += 1; //每次多绘制一个点
+            leftLine.geometry.setDrawRange(0, num_left);//动态绘制几何体顶点
+        }
+        if (rightLine) {
+            num_right += 1; //每次多绘制一个点
+            rightLine.geometry.setDrawRange(0, num_right);//动态绘制几何体顶点
+        }
+        if(group_word)
+        {
+            group_word.rotateY(-0.01);
+            group_word.rotateX(0.01)
+        }
+        renderer.render(scene, camera);
+        TWEEN.update();
+        stats.update();
+
+        requestAnimationFrame(animate);
+        /**
+         * 相机旋转
+         */
+        if(BarLoad)
+        {
+              angle += 0.007
+
+             camera.position.x = 800 * Math.sin(angle)
+
+             camera.position.z = 800 * Math.cos(angle)
+             // 相机圆周运动过程，如果希望视线始终指向圆心，位置改变后必须重新执行lookAt指向圆心
+              camera.lookAt(new THREE.Vector3(0,0,0));
+        }
+
+
+    }
+
+
+
+
+
+
+</script>
+</body>
+</html>
